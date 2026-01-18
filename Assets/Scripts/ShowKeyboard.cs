@@ -1,31 +1,50 @@
 using UnityEngine;
 using TMPro;
 using Microsoft.MixedReality.Toolkit.Experimental.UI;
+using System;
 
 public class ShowKeyboard : MonoBehaviour
 {
+    [Header("Keyboard Placement")]
+    public Transform keyboardAnchor;
 
     private TMP_InputField inputField;
 
-    void Start()
+    private void Awake()
     {
         inputField = GetComponent<TMP_InputField>();
-        inputField.onSelect.AddListener(x => OpenKeyboard());
+        inputField.onSelect.AddListener(_ => OpenKeyboard());
     }
 
-    public void OpenKeyboard()
+    private void OpenKeyboard()
     {
-        NonNativeKeyboard.Instance.InputField = inputField;
-        NonNativeKeyboard.Instance.PresentKeyboard(inputField.text);
+        var keyboard = NonNativeKeyboard.Instance;
+        if (keyboard == null || keyboardAnchor == null)
+            return;
+
+        // Move keyboard
+        Vector3 pos = keyboardAnchor.position;
+        keyboard.transform.position = pos;
+
+        // Rotate keyboard to match anchor Y rotation
+        Vector3 euler = keyboardAnchor.eulerAngles;
+        keyboard.transform.rotation = Quaternion.Euler(euler.x, euler.y, euler.z);
+
+        // Assign target input field
+        keyboard.InputField = inputField;
+
+        // Show keyboard
+        keyboard.PresentKeyboard(inputField.text);
         SetCaretColorAlpha(1);
 
-        NonNativeKeyboard.Instance.OnClosed += Instance_OnClosed;
+        keyboard.OnClosed -= OnKeyboardClosed;
+        keyboard.OnClosed += OnKeyboardClosed;
     }
 
-    private void Instance_OnClosed(object sender, System.EventArgs e)
+    private void OnKeyboardClosed(object sender, EventArgs e)
     {
         SetCaretColorAlpha(0);
-        NonNativeKeyboard.Instance.OnClosed -= Instance_OnClosed;
+        NonNativeKeyboard.Instance.OnClosed -= OnKeyboardClosed;
     }
 
     public void SetCaretColorAlpha(float value)

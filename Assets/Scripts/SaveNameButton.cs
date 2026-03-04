@@ -12,18 +12,25 @@ public class SaveNameButton : MonoBehaviour
 
     public void SaveName()
     {
-        // Get text or default
-        string nameToSave = nameInputField.text.Trim();
-        if (string.IsNullOrEmpty(nameToSave))
-            nameToSave = "Unknown human";
-
-        // Project root = parent of Assets
         string projectRootPath = Directory.GetParent(Application.dataPath).FullName;
         string filePath = Path.Combine(projectRootPath, fileName);
 
-        // Write file
-        File.WriteAllText(filePath, nameToSave);
+        string nameInput = nameInputField.text.Trim();
+        string existingFileContents = "";
 
-        Debug.Log($"Name saved: '{nameToSave}' at:\n{filePath}");
+        if (File.Exists(filePath))
+            existingFileContents = File.ReadAllText(filePath).Trim();
+
+        if (string.IsNullOrEmpty(nameInput))
+        {
+            if (string.IsNullOrEmpty(existingFileContents))
+                nameInput = "Unknown human";
+            else
+                nameInput = existingFileContents;
+        }
+
+        File.WriteAllText(filePath, nameInput);
+
+        Debug.Log($"Name saved: '{nameInput}' at:\n{filePath}");
     }
 }
